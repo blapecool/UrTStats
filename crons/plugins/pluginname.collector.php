@@ -42,7 +42,7 @@ function { pluginName }_statify($workers){
     global $plug_{ pluginName }Data;
     
     for ($i=0; $i < $workers-1 ; $i++) { 
-        $workerData = json_decode(file_get_contents(ROOT_DIR."/slots/".$i."/players.json"), true);
+        $workerData = json_decode(file_get_contents(ROOT_DIR."/slots/".$i."/{ pluginName }.json"), true);
 
     }
 
