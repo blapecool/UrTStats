@@ -92,7 +92,7 @@ foreach ($conf['collector']['plugins'] as $pluginName)  {
 define('END', microtime(true));
 $runTime = END - START;
 
-$timeData = array("time" => $runTime)
+$timeData = array("time" => $runTime);
 
 $rrdUpdater = new RRDUpdater(DATA_DIR . "/time.rrd");
 $rrdUpdater->update($timeData, time());
