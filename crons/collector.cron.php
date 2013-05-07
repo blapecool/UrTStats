@@ -92,8 +92,11 @@ foreach ($conf['collector']['plugins'] as $pluginName)  {
 define('END', microtime(true));
 $runTime = END - START;
 
-$rrdUpdater = new RRDUpdater(DATA_DIR . "/time.rrd");
-$rrdUpdater->update(array("time" => $runTime), time());
+$timeData = array("time" => $runTime)
 
-$jsonData = array("time" => $runTime);
-file_put_contents(DATA_DIR."/time.last", json_encode($jsonData));
+$rrdUpdater = new RRDUpdater(DATA_DIR . "/time.rrd");
+$rrdUpdater->update($timeData, time());
+
+$timeData['dateStart'] = START;
+$timeData['dateEnd'] = END;
+file_put_contents(DATA_DIR."/time.last", json_encode($timeData));
