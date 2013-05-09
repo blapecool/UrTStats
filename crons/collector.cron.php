@@ -30,6 +30,12 @@ define('START', microtime(true));
 define("ROOT_DIR", dirname(__FILE__));
 define("DATA_DIR", ROOT_DIR."/../data/");
 
+if(file_exists(ROOT_DIR."/slots/collector.lock"))
+    die("ERROR ! - One instance of collector is already running :/ - If if crashed, just remove collector.lock in slots dir.");
+
+file_put_contents(ROOT_DIR."/slots/collector.lock", "");
+
+
 require ROOT_DIR.'/libs/q3status.class.php';
 
 $conf = parse_ini_file(DATA_DIR ."conf.ini", true);
@@ -100,3 +106,5 @@ $rrdUpdater->update($timeData, time());
 $timeData['dateStart'] = START;
 $timeData['dateEnd'] = END;
 file_put_contents(DATA_DIR."/time.last", json_encode($timeData));
+
+unlink(ROOT_DIR."/slots/collector.lock");
