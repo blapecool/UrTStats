@@ -74,8 +74,6 @@ foreach ($knownServers as $serverInfo) {
                 $funcName($s);
         }
     } 
-
-    echo "query on " . $serverInfo['address'] . " - ". $s->get_numPlayers() ." on " . $s->get_cvar("gamename") . " \n ";
 }
 
 
