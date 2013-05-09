@@ -1,21 +1,27 @@
 UrTStats
 ========
 
-Global stats system for _Urban Terror_ <--- That's a cool FPS, seriously, try it !
+UrTStats is a real time global stats system for the game _Urban Terror_ <--- That's a cool FPS, seriously, try it !
+We are collecting server statuses and aggregate them to generate cool stats. For example, you can view in live the number of players who are online, what gametypes they prefer, etc
 
-![Player Graph](http://urtstats.f1m.fr/uploads/playersGraph.readme.png)
-![Data display](http://urtstats.f1m.fr/uploads/websitePreview.readme.png)
+You can see a live version here : [www.urtstats.net](http://www.urtstats.net)
 
-### Want to run your own ?
+###Your stats are wrong! UrbanTerror.info says that there are xxx players online and not yyy !!
+Well... While I'm doing my best to be sure the backend scripts are running properly, sometimes (or everytimes) servers are not responding because they "are too busy", "don't want to answer", "don't care", "hate me" or "have networking problems".
+
+###Want to contribute?
+Cool, I'm happy to hear that ! Depending on your abilities, you can send me feedback, suggest new cool things to statify or read the code and send pull requests ;)
+
+### Want to run your own UrTStats?
 #### Requirement 
 * A Server with a decent php version
 * A mysql server and mysqli activated
 * php-rrd (`apt-get install php5-rrd`)
 
 #### How to make it work ?
-5 Steps :
+5 Steps _(I assume that you already grab a copy of the code)_:
 
-1. Create a mysql user with a database, import the table structure on it (It's on ./init/dump.sql)
+1. Create a mysql user with a database, import the table structure on it (It's in ./init/dump.sql)
 2. Edit `./data/conf.ini` with your settings
 3. Create directories for **each** workers on `./crons/slots/` (0, 1, 2,....)
 4. Run all php scrips on `./init/` to create all .rdd files :)
@@ -24,6 +30,7 @@ Global stats system for _Urban Terror_ <--- That's a cool FPS, seriously, try it
 `*/5 *  *    *   * php /path/to/Urtstats/crons/masters.cron.php` **AND**
 `*/5 *  *    *   * php /path/to/Urtstats/crons/collector.cron.php`
 
+And That's all ! UrTStats is now doing stats. After that you'll need to setup the website, but it's not available yet.
 
 ### About me 
 I'm blapecool ( [@blapecool](http://www.twitter.com/blapecool) ). 
