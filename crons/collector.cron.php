@@ -33,9 +33,6 @@ define("DATA_DIR", ROOT_DIR."/../data/");
 if(file_exists(ROOT_DIR."/slots/collector.lock"))
     die("ERROR ! - One instance of collector is already running :/ - If if crashed, just remove collector.lock in slots dir.");
 
-file_put_contents(ROOT_DIR."/slots/collector.lock", "");
-
-
 require ROOT_DIR.'/libs/q3status.class.php';
 
 $conf = parse_ini_file(DATA_DIR ."conf.ini", true);
@@ -45,6 +42,8 @@ foreach ($conf['collector']['plugins'] as $pluginName)
     require ROOT_DIR . '/plugins/'.$pluginName.'.collector.php';
 
 $db = new mysqli($conf['mysql']['address'], $conf['mysql']['user'], $conf['mysql']['pass'], $conf['mysql']['db']);
+
+file_put_contents(ROOT_DIR."/slots/collector.lock", "");
 
 // Step 1 
 $result = $db->query("SELECT  `server_id`, `server_address`, `server_fails`, `server_lastFail` FROM `stats_serverlist` WHERE `server_disabled` = 0");
