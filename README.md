@@ -34,7 +34,7 @@ And That's all ! UrTStats is now doing stats. After that you'll need to setup th
 
 ### About me 
 I'm blapecool ( [@blapecool](http://www.twitter.com/blapecool) ). 
-You can contact me by mail (Blapecool [A:T) gmail (`dot`) com)
+You can contact me by mail (hello AT urtstats.net)
 
 ### Thanks to
 * Barbatos for hosting me :)
