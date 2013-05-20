@@ -79,7 +79,38 @@ function maps_statify($workers){
         }
 
     }
+
+    /*
+     * Fill rrd files for each maps :)
+     */
+
+
     file_put_contents(DATA_DIR."/maps.last", json_encode($plug_mapsData));
+}
 
+function map_generateRRDFile($map) {
 
+    $rrdFile = DATA_DIR."/data/maps_".$map.".rrd";
+
+    if(!file_exists($rrdFile))
+    {
+        $creator = new RRDCreator($rrdFile, "now -1d", 300);
+        $creator->addDataSource("playersMAP".$map.":GAUGE:600:0:U");
+        $creator->addDataSource("playersMAP".$map."PV:GAUGE:600:0:U");
+        $creator->addDataSource("serversMAP".$map.":GAUGE:600:0:U");
+        $creator->addDataSource("serversMAP".$map."PV:GAUGE:600:0:U");
+        $creator->addArchive("AVERAGE:0.5:1:864");   // 3 days - 5 mins 
+        $creator->addArchive("MIN:0.5:1:864");
+        $creator->addArchive("MAX:0.5:1:864");
+        $creator->addArchive("AVERAGE:0.5:4:720");   // 10 days - 20 mins
+        $creator->addArchive("MIN:0.5:4:720");
+        $creator->addArchive("MAX:0.5:4:720");
+        $creator->addArchive("AVERAGE:0.5:24:540");  // 45 days - 2 hours
+        $creator->addArchive("MIN:0.5:24:540");
+        $creator->addArchive("MAX:0.5:24:540");
+        $creator->addArchive("AVERAGE:0.5:288:5000"); // 5000 days - 1 day
+        $creator->addArchive("MIN:0.5:288:5000");
+        $creator->addArchive("MAX:0.5:288:5000");
+        $creator->save();
+    }
 }
