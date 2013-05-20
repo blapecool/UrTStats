@@ -32,8 +32,8 @@
                                 "servers" => 0,
                                 "serversPV" =>0);
 
-    $plug_versionsData['4.1'] = $plug_versionArray;        // 4.1
-    $plug_versionsData['4.2.012'] = $plug_versionArray;    // 4.2.012 - Latest 4.2
+    $plug_versionsData['4.1'] = $plug_versionArray;                         // 4.1
+    $plug_versionsData[$conf['latest42version']] = $plug_versionArray;      // Latest 4.2
     $plug_versionsData["UNKNOWN"] = $plug_versionArray;
 
 function versions_work($s){
@@ -74,6 +74,7 @@ function versions_save($id){
 function versions_statify($workers){
     global $plug_versionsData;
     global $plug_versionArray;
+    global $conf;
     
     for ($i=0; $i < $workers-1 ; $i++) { 
         $workerData = json_decode(file_get_contents(ROOT_DIR."/slots/".$i."/versions.json"), true);
@@ -96,10 +97,10 @@ function versions_statify($workers){
                               "41servers" => $plug_versionsData['4.1']['servers'],
                               "41serversPV" => $plug_versionsData['4.1']['serversPV'],
 
-                              "42players" =>  $plug_versionsData['4.2.012']['players'],
-                              "42playersPV" => $plug_versionsData['4.2.012']['playersPV'],
-                              "42servers" => $plug_versionsData['4.2.012']['servers'],
-                              "42serversPV" => $plug_versionsData['4.2.012']['serversPV']  ), time());
+                              "42players" =>  $plug_versionsData[$conf['latest42version']]['players'],
+                              "42playersPV" => $plug_versionsData[$conf['latest42version']]['playersPV'],
+                              "42servers" => $plug_versionsData[$conf['latest42version']]['servers'],
+                              "42serversPV" => $plug_versionsData[$conf['latest42version']]['serversPV']  ), time());
 
     file_put_contents(DATA_DIR."/versions.last", json_encode($plug_versionsData));
 
