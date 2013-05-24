@@ -28,7 +28,7 @@
         - 2 : Get known servers by FS via master1 and master2
         - 3 : Compare both list, and add new servers in db
         - 4 : Add new numbers in RRD file
-        - 5 : Write stuff in json formated file for easy use of the latest data
+        - 5 : Write stuff in json formated file for easy use of the latest and extreme data
 */
 
 define("ROOT_DIR", dirname(__FILE__)."/");
@@ -83,4 +83,27 @@ $data = array("masters" => count($serversKnownByFS),
               "master1" => count($serversKnownByMaster1),
               "master2" => count($serversKnownByMaster2));
 
+if(file_exists(DATA_DIR."/masters.extrema")){
+    $extrema = json_decode(file_get_contents(DATA_DIR."/masters.extrema"), true);
+
+    if($extrema['max']['value'] < count($serversKnownByFS)){
+        $extrema['max']['value'] = count($serversKnownByFS);
+        $extrema['max']['date'] = time();
+    }
+    elseif($extrema['min']['value'] > count($serversKnownByFS)){
+        $extrema['min']['value'] = count($serversKnownByFS);
+        $extrema['min']['date'] = time();
+    }  
+}
+else{
+    $extrema = array();
+
+    $extrema['max']['value'] = count($serversKnownByFS);
+    $extrema['max']['date'] = time();
+
+    $extrema['min']['value'] = count($serversKnownByFS);
+    $extrema['min']['date'] = time();
+}
+
+file_put_contents(DATA_DIR."/masters.extrema", json_encode($extrema));
 file_put_contents(DATA_DIR."/masters.last", json_encode($data));
