@@ -61,7 +61,7 @@ function players_statify($workers){
 
 
     if(file_exists(DATA_DIR."/players.extrema")){
-        $extrema = json_decode(file_get_contents(DATA_DIR."/players.extrema"));
+        $extrema = json_decode(file_get_contents(DATA_DIR."/players.extrema"), true);
 
         if($extrema['max']['value'] < $plug_playersData['players']){
             $extrema['max']['value'] = $plug_playersData['players'];
