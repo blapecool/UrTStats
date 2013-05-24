@@ -82,7 +82,6 @@ function players_statify($workers){
         $extrema['min']['date'] = time();
     }
 
-
     file_put_contents(DATA_DIR."/players.extrema", json_encode($extrema));
     file_put_contents(DATA_DIR."/players.last", json_encode($plug_playersData));
 }
