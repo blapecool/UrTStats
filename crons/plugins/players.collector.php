@@ -59,5 +59,30 @@ function players_statify($workers){
     $rrdUpdater = new RRDUpdater(DATA_DIR . "/players.rrd");
     $rrdUpdater->update($plug_playersData, time());
 
+
+    if(file_exists(DATA_DIR."/players.extrema")){
+        $extrema = json_decode(file_get_contents(DATA_DIR."/players.extrema"));
+
+        if($extrema['max']['value'] < $plug_playersData['players']){
+            $extrema['max']['value'] = $plug_playersData['players'];
+            $extrema['max']['date'] = time();
+        }
+        elseif($extrema['min']['value'] > $plug_playersData['players']){
+            $extrema['min']['value'] = $plug_playersData['players'];
+            $extrema['min']['date'] = time();
+        }  
+    }
+    else{
+        $extrema = array();
+
+        $extrema['max']['value'] = $plug_playersData['players'];
+        $extrema['max']['date'] = time();
+
+        $extrema['min']['value'] = $plug_playersData['players'];
+        $extrema['min']['date'] = time();
+    }
+
+
+    file_put_contents(DATA_DIR."/players.extrema", json_encode($extrema));
     file_put_contents(DATA_DIR."/players.last", json_encode($plug_playersData));
 }
