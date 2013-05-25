@@ -81,7 +81,7 @@ function maps_statify($workers){
     }
 
     foreach ($plug_mapsData as $map => $mapData) {
-        $rrdFile = DATA_DIR."/data/maps_".$map.".rrd";
+        $rrdFile = DATA_DIR."/maps_".$map.".rrd";
 
        if(!file_exists($rrdFile)){
             map_generateRRDFile($map);
@@ -89,11 +89,11 @@ function maps_statify($workers){
 
         $rrdUpdater = new RRDUpdater($rrdFile);
 
-        $rrdUpdater->update(array('playersMAP'.$mapData => $mapData['players'],
-                                  'serversMAP'.$mapData => $mapData['servers'],
-                                  'playersMAP'.$mapData.'PV' => $mapData['playersPV'],
-                                  'serversMAP'.$mapData.'PV' => $mapData['serversPV']), time());
-        }
+        $rrdUpdater->update(array('playersMap' => $mapData['players'],
+                                  'serversMap' => $mapData['servers'],
+                                  'playersMapPV' => $mapData['playersPV'],
+                                  'serversMapPV' => $mapData['serversPV']), time());
+        
     }
 
     file_put_contents(DATA_DIR."/maps.last", json_encode($plug_mapsData));
@@ -101,13 +101,13 @@ function maps_statify($workers){
 
 function map_generateRRDFile($map){
 
-    $rrdFile = DATA_DIR."/data/maps_".$map.".rrd";
+    $rrdFile = DATA_DIR."/maps_".$map.".rrd";
 
     $creator = new RRDCreator($rrdFile, "now -1d", 300);
-    $creator->addDataSource("playersMAP".$map.":GAUGE:600:0:U");
-    $creator->addDataSource("playersMAP".$map."PV:GAUGE:600:0:U");
-    $creator->addDataSource("serversMAP".$map.":GAUGE:600:0:U");
-    $creator->addDataSource("serversMAP".$map."PV:GAUGE:600:0:U");
+    $creator->addDataSource("playersMap:GAUGE:600:0:U");
+    $creator->addDataSource("playersMapPV:GAUGE:600:0:U");
+    $creator->addDataSource("serversMap:GAUGE:600:0:U");
+    $creator->addDataSource("serversMapPV:GAUGE:600:0:U");
     $creator->addArchive("AVERAGE:0.5:1:864");   // 3 days - 5 mins 
     $creator->addArchive("MIN:0.5:1:864");
     $creator->addArchive("MAX:0.5:1:864");
