@@ -63,6 +63,7 @@ function maps_save($id){
 function maps_statify($workers){
     global $plug_mapsData;
     global $plug_mapArray;
+    global $conf;
     
     for ($i=0; $i < $workers-1 ; $i++) { 
         $workerData = json_decode(file_get_contents(ROOT_DIR."/slots/".$i."/maps.json"), true);
@@ -79,7 +80,48 @@ function maps_statify($workers){
         }
 
     }
+
+    if($conf['collector']['keepHistoricalDataForMaps']) {
+        foreach ($plug_mapsData as $map => $mapData) {
+            $rrdFile = DATA_DIR."/maps_".$map.".rrd";
+
+           if(!file_exists($rrdFile)){
+                map_generateRRDFile($map);
+            }
+
+            $rrdUpdater = new RRDUpdater($rrdFile);
+
+            $rrdUpdater->update(array('playersMap' => $mapData['players'],
+                                      'serversMap' => $mapData['servers'],
+                                      'playersMapPV' => $mapData['playersPV'],
+                                      'serversMapPV' => $mapData['serversPV']), time());
+            
+        }
+    }
+
     file_put_contents(DATA_DIR."/maps.last", json_encode($plug_mapsData));
+}
 
+function map_generateRRDFile($map){
 
+    $rrdFile = DATA_DIR."/maps_".$map.".rrd";
+
+    $creator = new RRDCreator($rrdFile, "now -1d", 300);
+    $creator->addDataSource("playersMap:GAUGE:600:0:U");
+    $creator->addDataSource("playersMapPV:GAUGE:600:0:U");
+    $creator->addDataSource("serversMap:GAUGE:600:0:U");
+    $creator->addDataSource("serversMapPV:GAUGE:600:0:U");
+    $creator->addArchive("AVERAGE:0.5:1:864");   // 3 days - 5 mins 
+    $creator->addArchive("MIN:0.5:1:864");
+    $creator->addArchive("MAX:0.5:1:864");
+    $creator->addArchive("AVERAGE:0.5:4:720");   // 10 days - 20 mins
+    $creator->addArchive("MIN:0.5:4:720");
+    $creator->addArchive("MAX:0.5:4:720");
+    $creator->addArchive("AVERAGE:0.5:24:540");  // 45 days - 2 hours
+    $creator->addArchive("MIN:0.5:24:540");
+    $creator->addArchive("MAX:0.5:24:540");
+    $creator->addArchive("AVERAGE:0.5:288:5000"); // 5000 days - 1 day
+    $creator->addArchive("MIN:0.5:288:5000");
+    $creator->addArchive("MAX:0.5:288:5000");
+    $creator->save();
 }
