@@ -36,7 +36,7 @@ function maps_work($s){
     global $plug_mapsData;
     global $plug_mapArray;
 
-    $map = $s->get_cvar("mapname");
+    $map = strtolower($s->get_cvar("mapname"));
     $numPlayers = $s->get_numPlayers();  
 
     if(!isset($plug_mapsData[$map]))
