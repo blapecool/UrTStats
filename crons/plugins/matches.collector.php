@@ -21,7 +21,7 @@
     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
-
+    
     Do matches stats 
     
 */
@@ -34,9 +34,8 @@ function matches_work($s){
     $numPlayers = $s->get_numPlayers();  
 
     // Let's assume that if this condition is true, a match is being played.
-    if($s->get_cvar('g_needpass') == 1 && $numPlayers >= 4) {
-        $
-
+    if($s->get_cvar('g_needpass') == 1 && $numPlayers >= 2) {
+        $plug_matchesData++;
     }
 }
 
@@ -44,7 +43,6 @@ function matches_save($id){
     global $plug_matchesData;
     
     file_put_contents(ROOT_DIR."/slots/".$id."/matches.json", json_encode($plug_matchesData));
-
 }
 
 function matches_statify($workers){
@@ -52,14 +50,12 @@ function matches_statify($workers){
     
     for ($i=0; $i < $workers-1 ; $i++) { 
         $workerData = json_decode(file_get_contents(ROOT_DIR."/slots/".$i."/matches.json"), true);
-
-        $plug_matchesData['2o2'] += $workerData['2o2'];
-        $plug_matchesData['3o3'] += $workerData['3o3'];
-        $plug_matchesData['4o4'] += $workerData['4o4'];
-        $plug_matchesData['5o5'] += $workerData['5o5'];
+        $plug_matchesData += $workerData;
     }
 
-    file_put_contents(ROOT_DIR."/matches.last", json_encode($plug_matchesData));
+    file_put_contents(DATA_DIR."/matches.last", json_encode($plug_matchesData));
 
+    $rrdUpdater = new RRDUpdater(DATA_DIR . "/matches.rrd");
+    $rrdUpdater->update(array('matches' => $plug_matchesData), time());
 
 }
