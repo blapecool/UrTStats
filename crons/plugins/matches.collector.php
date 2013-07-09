@@ -34,7 +34,7 @@ function matches_work($s){
     $numPlayers = $s->get_numPlayers();  
 
     // Let's assume that if this condition is true, a match is being played.
-    if($s->get_cvar('g_needpass') == 1 && $numPlayers >= 2) {
+    if($s->get_cvar('g_needpass') == 1 && $s->get_cvar('g_matchmode') == 1 && $numPlayers >= 2) {
         $plug_matchesData++;
     }
 }
