@@ -51,11 +51,15 @@ while($data = $result->fetch_assoc()){
 $result->free();
 
 // Step 2
-$master1 = new q3master($conf['master']['master1'], 27950); 
-$master2 = new q3master($conf['master']['master2'], 27950); 
+$master1_27950 = new q3master($conf['master']['master1'], 27950); 
+$master1_27900 = new q3master($conf['master']['master1'], 27900); 
 
-$serversKnownByMaster1 = $master1->getServers();
-$serversKnownByMaster2 = $master2->getServers();
+$master2_27950 = new q3master($conf['master']['master2'], 27950); 
+$master2_27900 = new q3master($conf['master']['master2'], 27900); 
+
+$serversKnownByMaster1 = $master1_27950->getServers() + $master1_27900->getServers();
+$serversKnownByMaster2 = $master2_27950->getServers() + $master2_27900->getServers();
+
 $serversKnownByFS = $serversKnownByMaster1 + $serversKnownByMaster2;
 
 // Step 3
