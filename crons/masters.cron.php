@@ -64,12 +64,6 @@ foreach($serversKnownByFS as $server){
                                         'fails'     => 0,
                                         'last_fail' => -1);
     }
-    else{
-        // Reset the fail counter if every thing was okay in the last 2 hours ;)
-        if ($knownServers[$server]['last_fail'] != -1 && $knownServers[$server]['last_fail'] < time() - 3600*2) {
-            $db->query("UPDATE `stats_serverlist` SET `server_fails` = '0', `server_lastFail` = '0',`server_disabled` = '0' WHERE `server_id` = ".$knownServers[$server]['id'].";");
-        }
-    }
 }
 
 // Save the server list...
