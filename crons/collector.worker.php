@@ -23,10 +23,12 @@
     THE SOFTWARE.
 
     Query all servers and build awesome stats :D
-    3 Steps :
+    5 Steps :
         - 1 : Get list of UrT servers
         - 2 : Query them
-        - 3 : Save collected data for master.
+        - 3 : Save collected data for master
+        - 4 : Save dead servers
+        - 5 : Tell master that work is done for us
 */
 define("ROOT_DIR", dirname(__FILE__));
 define("DATA_DIR", ROOT_DIR."/../data/");
@@ -36,17 +38,16 @@ require ROOT_DIR.'/libs/q3status.class.php';
 $id = $argv[1];
 $conf = parse_ini_file(DATA_DIR ."conf.ini", true);
 $knownServers = array();
+$deadServers = array();
 
+// Load each plugins
 foreach ($conf['collector']['plugins'] as $pluginName) 
     require ROOT_DIR . '/plugins/'.$pluginName.'.collector.php';
 
-$db = new mysqli($conf['mysql']['address'], $conf['mysql']['user'], $conf['mysql']['pass'], $conf['mysql']['db']);
+// Step 1 - Get list of UrT servers
+$knownServers = json_decode(file_get_contents(ROOT_DIR."/slots/".$id."/server_list.json"),true);
 
-// Step 1 
-$knownServers =  json_decode(file_get_contents(ROOT_DIR."/slots/".$id."/serverList.json"),true);
-
-
-// Step 2
+// Step 2 - Query them
 foreach ($knownServers as $serverInfo) {
     list($serverIP, $serverPort) = explode(":", $serverInfo['address'], 2);
 
@@ -56,21 +57,18 @@ foreach ($knownServers as $serverInfo) {
     if (!$result) 
         $result = $s->updateStatus(); 
 
+    // Okay, no answer, let's try again...
     if (!$result) {
         sleep(1);
         $result = $s->updateStatus(); 
     }
 
-    if (!$result) {     // Server is down, let's add a fail or disable it if there too much fails
-        if($serverInfo['fails'] > 5 AND $serverInfo['lastFail'] > time()-3600 )
-            $db->query("UPDATE `stats_serverlist` SET `server_fails` = '6', `server_lastFail` = UNIX_TIMESTAMP(), `server_disabled` = '1' WHERE `server_id` = ".$serverInfo['id'].";");
-        elseif ($serverInfo['fails'] > 5 AND $serverInfo['lastFail'] < time()-3600) 
-            $db->query("UPDATE `stats_serverlist` SET `server_fails` = '1', `server_lastFail` = UNIX_TIMESTAMP() WHERE `server_id` = ".$serverInfo['id'].";");
-        else
-            $db->query("UPDATE `stats_serverlist` SET `server_fails` = `server_fails` +1, `server_lastFail` = UNIX_TIMESTAMP() WHERE `server_id` = ".$serverInfo['id'].";");
-
+    // Server don't anwser, let's add it to the dead list :<
+    if (!$result) {     
+        $deadServers[] = $serverInfo['address'];
     }
-    else {              // Yes ! Server is up :)
+    else {
+        // Yes ! Server is up :)
         foreach ($conf['collector']['plugins'] as $pluginName)  {
             $funcName = $pluginName."_work";
 
@@ -81,7 +79,7 @@ foreach ($knownServers as $serverInfo) {
 }
 
 
-// Step 3
+// Step 3 - Save collected data for master
 foreach ($conf['collector']['plugins'] as $pluginName)  {
     $funcName = $pluginName."_save";
 
@@ -89,4 +87,8 @@ foreach ($conf['collector']['plugins'] as $pluginName)  {
         $funcName($id);
 }
 
-file_put_contents(ROOT_DIR."/slots/".$id."/finish", "");
+// Step 4 - Save dead servers
+file_put_contents(ROOT_DIR."/slots/".$id."/dead_servers.json", json_encode($deadServers));
+
+// Step 5 - Tell master that work is done for us ;)
+file_put_contents(ROOT_DIR."/slots/".$id."/finish", '');
