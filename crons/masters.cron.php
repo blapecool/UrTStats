@@ -37,7 +37,7 @@ define('DATA_DIR', ROOT_DIR.'../data/');
 
 require ROOT_DIR.'/libs/q3master.class.php';
 
-$conf = parse_ini_file(DATA_DIR ."conf.ini", true);
+$conf = parse_ini_file(ROOT_DIR ."/../conf.ini", true);
 
 // Step 1 - Get known servers by UrTStats
 $knownServers = json_decode(file_get_contents(DATA_DIR.'server_list.json'), true);

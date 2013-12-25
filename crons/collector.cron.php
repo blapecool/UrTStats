@@ -38,7 +38,7 @@ define("DATA_DIR", ROOT_DIR."/../data/");
 
 require ROOT_DIR.'/libs/q3status.class.php';
 
-$conf = parse_ini_file(DATA_DIR ."conf.ini", true);
+$conf = parse_ini_file(ROOT_DIR ."/../conf.ini", true);
 $knownServers = array();
 
 // Load each plugins
