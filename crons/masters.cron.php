@@ -59,8 +59,9 @@ foreach($serversKnownByFS as $server){
 
     // Yey, new server, let's add it!
     if(!isset($knownServers[$server])){
-        $knownServers[$server] = array('firstSeen' => time(),
-                                        'fails'    => 0,
+        $knownServers[$server] = array( 'address'   => $server,
+                                        'firstSeen' => time(),
+                                        'fails'     => 0,
                                         'last_fail' => -1);
     }
     else{
