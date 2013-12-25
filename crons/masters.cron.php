@@ -23,34 +23,26 @@
     THE SOFTWARE.
 
     Get new servers from master servers
-    5 Steps :
+    6 Steps :
         - 1 : Get known servers by UrTStats
         - 2 : Get known servers by FS via master1 and master2
-        - 3 : Compare both list, and add new servers in db
+        - 3 : Compare both list, and add new servers and save the list
         - 4 : Add new numbers in RRD file
-        - 5 : Write stuff in json formated file for easy use of the latest and extreme data
+        - 5 : Write theses numbers in json formated file
+        - 6 : Checking extrema
 */
 
-define("ROOT_DIR", dirname(__FILE__)."/");
-define("DATA_DIR", ROOT_DIR."/../data/");
+define('ROOT_DIR', dirname(__FILE__).'/');
+define('DATA_DIR', ROOT_DIR.'../data/');
 
 require ROOT_DIR.'/libs/q3master.class.php';
 
 $conf = parse_ini_file(DATA_DIR ."conf.ini", true);
-$knownServers = array();
 
-$db = new mysqli($conf['mysql']['address'], $conf['mysql']['user'], $conf['mysql']['pass'], $conf['mysql']['db']);
+// Step 1 - Get known servers by UrTStats
+$knownServers = json_decode(file_get_contents(DATA_DIR.'server_list.json'), true);
 
-// Step 1 
-$result = $db->query("SELECT `server_id`, `server_address`, `server_disabled` FROM `stats_serverlist`");
-while($data = $result->fetch_assoc()){
-
-    $knownServers[$data['server_address']] = array( 'id' => $data['server_id'],
-                                                    'disabled' => $data['server_disabled']);
-}
-$result->free();
-
-// Step 2
+// Step 2 - Get known servers by FS via master1 and master2
 $master1_27950 = new q3master($conf['master']['master1'], 27950); 
 $master1_27900 = new q3master($conf['master']['master1'], 27900); 
 
@@ -62,31 +54,39 @@ $serversKnownByMaster2 = $master2_27950->getServers() + $master2_27900->getServe
 
 $serversKnownByFS = $serversKnownByMaster1 + $serversKnownByMaster2;
 
-// Step 3
+// Step 3 - Compare both list, and add new servers and save the list
 foreach($serversKnownByFS as $server){
 
+    // Yey, new server, let's add it!
     if(!isset($knownServers[$server])){
-        $db->query("INSERT INTO `stats_serverlist` VALUES ('' , '".$server."', UNIX_TIMESTAMP( ) , '', '', '');");
+        $knownServers[$server] = array('firstSeen' => time(),
+                                        'fails'    => 0,
+                                        'last_fail' => -1);
     }
     else{
-        if ($knownServers[$server]['disabled'] == 1) {
+        // Reset the fail counter if every thing was okay in the last 12 hours ;)
+        if ($knownServers[$server]['last_fail'] != -1 && $knownServers[$server]['last_fail'] < time() - 3600*12) {
             $db->query("UPDATE `stats_serverlist` SET `server_fails` = '0', `server_lastFail` = '0',`server_disabled` = '0' WHERE `server_id` = ".$knownServers[$server]['id'].";");
         }
     }
 }
 
-// Step 4
+// Save the server list...
+file_put_contents(DATA_DIR.'server_list.json', json_encode($knownServers));
+
+// Step 4 - Add new numbers in RRD file
 $rrdUpdater = new RRDUpdater(DATA_DIR . $conf['master']['rrdFile']);
 
 $rrdUpdater->update(array("masters" => count($serversKnownByFS),
                           "master1" => count($serversKnownByMaster1),
                           "master2" => count($serversKnownByMaster2)), time());
 
-// Step 5
+// Step 5 - Write theses numbers in json formated file
 $data = array("masters" => count($serversKnownByFS),
               "master1" => count($serversKnownByMaster1),
               "master2" => count($serversKnownByMaster2));
 
+// Step 6 - Checking extrema :d
 if(file_exists(DATA_DIR."/masters.extrema")){
     $extrema = json_decode(file_get_contents(DATA_DIR."/masters.extrema"), true);
 
