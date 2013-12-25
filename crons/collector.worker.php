@@ -30,13 +30,13 @@
         - 4 : Save dead servers
         - 5 : Tell master that work is done for us
 */
-define("ROOT_DIR", dirname(__FILE__));
-define("DATA_DIR", ROOT_DIR."/../data/");
+define('ROOT_DIR', dirname(__FILE__));
+define('DATA_DIR', ROOT_DIR.'/../data/');
 
 require ROOT_DIR.'/libs/q3status.class.php';
 
 $id = $argv[1];
-$conf = parse_ini_file(ROOT_DIR ."/../conf.ini", true);
+$conf = parse_ini_file(ROOT_DIR .'/../conf.ini', true);
 $knownServers = array();
 $deadServers = array();
 
@@ -45,7 +45,7 @@ foreach ($conf['collector']['plugins'] as $pluginName)
     require ROOT_DIR . '/plugins/'.$pluginName.'.collector.php';
 
 // Step 1 - Get list of UrT servers
-$knownServers = json_decode(file_get_contents(ROOT_DIR."/slots/".$id."/server_list.json"),true);
+$knownServers = json_decode(file_get_contents(ROOT_DIR.'/slots/'.$id.'/server_list.json'),true);
 
 // Step 2 - Query them
 foreach ($knownServers as $serverInfo) {
@@ -69,11 +69,13 @@ foreach ($knownServers as $serverInfo) {
     }
     else {
         // Yes ! Server is up :)
-        foreach ($conf['collector']['plugins'] as $pluginName)  {
-            $funcName = $pluginName."_work";
+        if($s->get_cvar("gamename") == 'q3ut4' || $s->get_cvar("gamename") == 'q3urt42') {
+            foreach ($conf['collector']['plugins'] as $pluginName)  {
+                $funcName = $pluginName.'_work';
 
-            if(function_exists($funcName))
-                $funcName($s);
+                if(function_exists($funcName))
+                    $funcName($s);
+            }
         }
     } 
 }
@@ -88,7 +90,7 @@ foreach ($conf['collector']['plugins'] as $pluginName)  {
 }
 
 // Step 4 - Save dead servers
-file_put_contents(ROOT_DIR."/slots/".$id."/dead_servers.json", json_encode($deadServers));
+file_put_contents(ROOT_DIR.'/slots/'.$id.'/dead_servers.json', json_encode($deadServers));
 
 // Step 5 - Tell master that work is done for us ;)
-file_put_contents(ROOT_DIR."/slots/".$id."/finish", '');
+file_put_contents(ROOT_DIR.'/slots/'.$id.'/finish', '');

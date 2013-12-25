@@ -23,19 +23,23 @@
     THE SOFTWARE.
 
     Get new servers from master servers
-    6 Steps :
+    * Steps :
         - 1 : Get known servers by UrTStats
         - 2 : Get known servers by FS via master1 and master2
         - 3 : Compare both list, and add new servers and save the list
-        - 4 : Add new numbers in RRD file
-        - 5 : Write theses numbers in json formated file
-        - 6 : Checking extrema
+        - 4 : Grab Urban terror servers on an other master
+        - 5 : Reset fail counters if there were no fail in the last hour
+        - 6 : Save the server list...
+        - 7 : Add new numbers in RRD file
+        - 8 : Write theses numbers in json formated file
+        - 9 : Checking extrema
 */
 
 define('ROOT_DIR', dirname(__FILE__).'/');
 define('DATA_DIR', ROOT_DIR.'../data/');
 
 require ROOT_DIR.'/libs/q3master.class.php';
+require ROOT_DIR.'/libs/q3status.class.php';
 
 $conf = parse_ini_file(ROOT_DIR ."/../conf.ini", true);
 
@@ -43,19 +47,19 @@ $conf = parse_ini_file(ROOT_DIR ."/../conf.ini", true);
 $knownServers = json_decode(file_get_contents(DATA_DIR.'server_list.json'), true);
 
 // Step 2 - Get known servers by FS via master1 and master2
-$master1_27950 = new q3master($conf['master']['master1'], 27950); 
-$master1_27900 = new q3master($conf['master']['master1'], 27900); 
+list($serverIP, $serverPort) = explode(":", $conf['master']['master1'], 2);
+$master1 = new q3master($serverIP, $serverPort); 
 
-$master2_27950 = new q3master($conf['master']['master2'], 27950); 
-$master2_27900 = new q3master($conf['master']['master2'], 27900); 
+list($serverIP, $serverPort) = explode(":", $conf['master']['master2'], 2);
+$master2 = new q3master($serverIP, $serverPort); 
 
-$serversKnownByMaster1 = $master1_27950->getServers() + $master1_27900->getServers();
-$serversKnownByMaster2 = $master2_27950->getServers() + $master2_27900->getServers();
+$serversKnownByMaster1 = $master1->getServers();
+$serversKnownByMaster2 = $master2->getServers();
 
 $serversKnownByFS = $serversKnownByMaster1 + $serversKnownByMaster2;
 
 // Step 3 - Compare both list, and add new servers and save the list
-foreach($serversKnownByFS as $server){
+foreach($serversKnownByFS as $server) {
 
     // Yey, new server, let's add it!
     if(!isset($knownServers[$server])){
@@ -66,22 +70,61 @@ foreach($serversKnownByFS as $server){
     }
 }
 
-// Save the server list...
+// Step 4 - Grab Urban terror servers on an other master
+if($conf['master']['additionalMaster']) {
+    list($serverIP, $serverPort) = explode(":", $conf['master']['additionalMaster'], 2);
+    $master = new q3master($serverIP, $serverPort); 
+
+    $otherServers = $master->getServers();
+
+    // Let's check if it's an UrT server, and not something else :)
+    foreach($otherServers as $server) {
+        if(!isset($knownServers[$server])){
+            list($serverIP, $serverPort) = explode(":", $server, 2);
+
+            $s = new q3status($serverIP, $serverPort); 
+            $result = $s->updateStatus(); 
+
+            if (!$result) 
+                $result = $s->updateStatus(); 
+
+            if($result) {
+                // Yes ! Server is up :)
+                if($s->get_cvar("gamename") == 'q3ut4' || $s->get_cvar("gamename") == 'q3urt42') {
+                    $knownServers[$server] = array( 'address'   => $server,
+                                                    'firstSeen' => time(),
+                                                    'fails'     => 0,
+                                                    'last_fail' => -1);
+                }
+            }
+        }
+    }
+}
+
+// Step 5 - Reset fail counters if there were no fail in the last hour
+foreach($knownServers as $server => $serverInfo) {
+    if($serverInfo['fails'] > 0 && $serverInfo['last_fail'] < time() - 3600) {
+        $knownServers[$server]['fails'] = 0;
+        $knownServers[$server]['last_fail'] = -1;
+    }
+}
+
+// Step 6 - Save the server list...
 file_put_contents(DATA_DIR.'server_list.json', json_encode($knownServers));
 
-// Step 4 - Add new numbers in RRD file
+// Step 7 - Add new numbers in RRD file
 $rrdUpdater = new RRDUpdater(DATA_DIR . $conf['master']['rrdFile']);
 
 $rrdUpdater->update(array("masters" => count($serversKnownByFS),
                           "master1" => count($serversKnownByMaster1),
                           "master2" => count($serversKnownByMaster2)), time());
 
-// Step 5 - Write theses numbers in json formated file
+// Step 8 - Write theses numbers in json formated file
 $data = array("masters" => count($serversKnownByFS),
               "master1" => count($serversKnownByMaster1),
               "master2" => count($serversKnownByMaster2));
 
-// Step 6 - Checking extrema :d
+// Step 9 - Checking extrema :d
 if(file_exists(DATA_DIR."/masters.extrema")){
     $extrema = json_decode(file_get_contents(DATA_DIR."/masters.extrema"), true);
 
