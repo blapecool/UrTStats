@@ -23,11 +23,13 @@
     THE SOFTWARE.
     
     Query all servers and build awesome stats :D
-    4 Steps :
+    6 Steps :
         - 1 : Get list of UrT servers
         - 2 : Dispatch list on workers
         - 3 : Wait for them
         - 4 : Save all our cool stuff in RRD files (+ json for latest data only)
+        - 5 : Check dead servers
+        - 6 : Save processing time for monitoring
 */
 define('START', microtime(true));
 
@@ -39,25 +41,16 @@ require ROOT_DIR.'/libs/q3status.class.php';
 $conf = parse_ini_file(DATA_DIR ."conf.ini", true);
 $knownServers = array();
 
+// Load each plugins
 foreach ($conf['collector']['plugins'] as $pluginName) 
     require ROOT_DIR . '/plugins/'.$pluginName.'.collector.php';
 
-$db = new mysqli($conf['mysql']['address'], $conf['mysql']['user'], $conf['mysql']['pass'], $conf['mysql']['db']);
+// Step 1 - Get list of UrT servers
+$knownServers = json_decode(file_get_contents(DATA_DIR.'server_list.json'), true);
 
-// Step 1 
-$result = $db->query("SELECT  `server_id`, `server_address`, `server_fails`, `server_lastFail` FROM `stats_serverlist` WHERE `server_disabled` = 0");
-while($data = $result->fetch_assoc()){
+shuffle($knownServers); // Everyday I'm Shufflin'!
 
-    $knownServers[] =  array( 'id' => $data['server_id'],
-                              'address' => $data['server_address'],
-                              'fails' => $data['server_fails'],
-                              'lastFail' => $data['server_lastFail']);
-}
-$result->free();
-
-shuffle($knownServers);
-
-// Step 2
+// Step 2 - Dispatch list on workers
 $serversPerWorker = ceil( count($knownServers)/$conf['collector']['workers'] );
 $workerServers = array_chunk($knownServers, $serversPerWorker);
 $workingWorkers = array();
@@ -66,25 +59,28 @@ foreach ($workerServers as $id => $serverList) {
     if(file_exists(ROOT_DIR."/slots/".$id."/finish"))
         unlink(ROOT_DIR."/slots/".$id."/finish");
 
-    file_put_contents(ROOT_DIR."/slots/".$id."/serverList.json", json_encode($serverList));
+    file_put_contents(ROOT_DIR."/slots/".$id."/server_list.json", json_encode($serverList));
     shell_exec("php ".ROOT_DIR."/collector.worker.php ".$id." >> /dev/null &");
 
     $workingWorkers[] =  $id;
+    echo "Le worker $id a démarré :D \n";
 }
 
 
-// Step 3
+// Step 3 - Wait for them
 while(count($workingWorkers))
 {
     foreach ($workingWorkers as $key => $id) {
-        if(file_exists(ROOT_DIR."/slots/".$id."/finish"))
+        if(file_exists(ROOT_DIR."/slots/".$id."/finish")) {
             unset($workingWorkers[$key]);
+            echo "Le worker $id a terminé :D \n";
+        }
     }
     sleep(1);
 }
 
 
-// Step 4
+// Step 4 - Save all our cool stuff in RRD files (+ json for latest data only)
 foreach ($conf['collector']['plugins'] as $pluginName)  {
     $funcName = $pluginName."_statify";
 
@@ -92,7 +88,29 @@ foreach ($conf['collector']['plugins'] as $pluginName)  {
         $funcName($conf['collector']['workers']);
 }
 
-// Step 999 - Save processing time for monitoring
+// Step 5 - Check dead servers
+$knownServers = json_decode(file_get_contents(DATA_DIR.'server_list.json'), true);
+
+for ($i=0; $i < $conf['collector']['workers']-1 ; $i++) { 
+    $workerData = json_decode(file_get_contents(ROOT_DIR."/slots/".$i."/dead_servers.json"), true);
+
+    foreach ($workerData as $server) {
+        if($knownServers[$server]['fails'] <= 5) {
+            $knownServers[$server]['fails']++;
+            $knownServers[$server]['last_fail'] = time();
+        }
+        else {
+            // Server is dead, let's remove it :(
+            unset($knownServers[$server]);
+        }
+    }
+}
+
+// Save the server list...
+file_put_contents(DATA_DIR.'server_list.json', json_encode($knownServers));
+
+
+// Step 6 - Save processing time for monitoring
 define('END', microtime(true));
 $runTime = END - START;
 
