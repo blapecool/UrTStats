@@ -23,7 +23,7 @@ Cool, I'm happy to hear that! Depending on your abilities, you can send me feedb
 1. Edit `./data/conf.ini` with your settings
 2. Create directories for **each** workers on `./crons/slots/` (0, 1, 2,....)
 3. Run all php scrips on `./init/` to create all .rdd files :)
-4. Do `php /path/to/Urtstats/crons/masters.cron.php`
+4. Run `crons/masters.cron.php` once, to generate a server_list.json for the collector
 5. Add `./crons/collector.cron.php` and `./crons/masters.cron.php` on your crontab :)
 
 `*/30 *  *    *   * php /path/to/Urtstats/crons/masters.cron.php` **AND**
