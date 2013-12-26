@@ -53,9 +53,32 @@ function matches_statify($workers){
         $plug_matchesData += $workerData;
     }
 
-    file_put_contents(DATA_DIR."/matches.last", json_encode($plug_matchesData));
-
     $rrdUpdater = new RRDUpdater(DATA_DIR . "/matches.rrd");
     $rrdUpdater->update(array('matches' => $plug_matchesData), time());
+
+    if(file_exists(DATA_DIR."/matches.extrema")){
+        $extrema = json_decode(file_get_contents(DATA_DIR."/matches.extrema"), true);
+
+        if($extrema['max']['value'] < $plug_matchesData){
+            $extrema['max']['value'] = $plug_matchesData;
+            $extrema['max']['date'] = time();
+        }
+        elseif($extrema['min']['value'] > $plug_matchesData){
+            $extrema['min']['value'] = $plug_matchesData;
+            $extrema['min']['date'] = time();
+        }  
+    }
+    else{
+        $extrema = array();
+
+        $extrema['max']['value'] = $plug_matchesData;
+        $extrema['max']['date'] = time();
+
+        $extrema['min']['value'] = $plug_matchesData;
+        $extrema['min']['date'] = time();
+    }
+
+    file_put_contents(DATA_DIR."/matches.extrema", json_encode($extrema));
+    file_put_contents(DATA_DIR."/matches.last", json_encode($plug_matchesData));
 
 }
