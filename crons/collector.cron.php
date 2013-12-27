@@ -33,12 +33,12 @@
 */
 define('START', microtime(true));
 
-define("ROOT_DIR", dirname(__FILE__));
-define("DATA_DIR", ROOT_DIR."/../data/");
+define('ROOT_DIR', dirname(__FILE__));
+define('DATA_DIR', ROOT_DIR.'/../data/');
 
 require ROOT_DIR.'/libs/q3status.class.php';
 
-$conf = parse_ini_file(ROOT_DIR ."/../conf.ini", true);
+$conf = parse_ini_file(ROOT_DIR .'/../conf.ini', true);
 $knownServers = array();
 
 // Load each plugins
@@ -56,14 +56,13 @@ $workerServers = array_chunk($knownServers, $serversPerWorker);
 $workingWorkers = array();
 
 foreach ($workerServers as $id => $serverList) {
-    if(file_exists(ROOT_DIR."/slots/".$id."/finish"))
-        unlink(ROOT_DIR."/slots/".$id."/finish");
+    if(file_exists(ROOT_DIR.'/slots/'.$id.'/finish'))
+        unlink(ROOT_DIR.'/slots/'.$id.'/finish');
 
-    file_put_contents(ROOT_DIR."/slots/".$id."/server_list.json", json_encode($serverList));
-    shell_exec("php ".ROOT_DIR."/collector.worker.php ".$id." >> /dev/null &");
+    file_put_contents(ROOT_DIR.'/slots/'.$id.'/server_list.json', json_encode($serverList));
+    shell_exec('php '.ROOT_DIR.'/collector.worker.php '.$id.' >> /dev/null &');
 
     $workingWorkers[] =  $id;
-    echo "Le worker $id a démarré :D \n";
 }
 
 
@@ -71,9 +70,8 @@ foreach ($workerServers as $id => $serverList) {
 while(count($workingWorkers))
 {
     foreach ($workingWorkers as $key => $id) {
-        if(file_exists(ROOT_DIR."/slots/".$id."/finish")) {
+        if(file_exists(ROOT_DIR.'/slots/'.$id.'/finish')) {
             unset($workingWorkers[$key]);
-            echo "Le worker $id a terminé :D \n";
         }
     }
     sleep(1);
@@ -82,7 +80,7 @@ while(count($workingWorkers))
 
 // Step 4 - Save all our cool stuff in RRD files (+ json for latest data only)
 foreach ($conf['collector']['plugins'] as $pluginName)  {
-    $funcName = $pluginName."_statify";
+    $funcName = $pluginName.'_statify';
 
     if(function_exists($funcName))
         $funcName($conf['collector']['workers']);
@@ -92,7 +90,7 @@ foreach ($conf['collector']['plugins'] as $pluginName)  {
 $knownServers = json_decode(file_get_contents(DATA_DIR.'server_list.json'), true);
 
 for ($i=0; $i < $conf['collector']['workers']-1 ; $i++) { 
-    $workerData = json_decode(file_get_contents(ROOT_DIR."/slots/".$i."/dead_servers.json"), true);
+    $workerData = json_decode(file_get_contents(ROOT_DIR.'/slots/'.$i.'/dead_servers.json'), true);
 
     foreach ($workerData as $server) {
         if($knownServers[$server]['fails'] <= 5) {
@@ -114,12 +112,12 @@ file_put_contents(DATA_DIR.'server_list.json', json_encode($knownServers));
 define('END', microtime(true));
 $runTime = END - START;
 
-$timeData = array("time" => $runTime);
+$timeData = array('time' => $runTime);
 
-$rrdUpdater = new RRDUpdater(DATA_DIR . "/time.rrd");
+$rrdUpdater = new RRDUpdater(DATA_DIR . '/time.rrd');
 $rrdUpdater->update($timeData, time());
 
 $timeData['dateStart'] = START;
 $timeData['dateEnd'] = END;
-file_put_contents(DATA_DIR."/time.last", json_encode($timeData));
+file_put_contents(DATA_DIR.'/time.last', json_encode($timeData));
 

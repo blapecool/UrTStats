@@ -49,7 +49,7 @@ $knownServers = json_decode(file_get_contents(ROOT_DIR.'/slots/'.$id.'/server_li
 
 // Step 2 - Query them
 foreach ($knownServers as $serverInfo) {
-    list($serverIP, $serverPort) = explode(":", $serverInfo['address'], 2);
+    list($serverIP, $serverPort) = explode(':', $serverInfo['address'], 2);
 
     $s = new q3status($serverIP, $serverPort); 
     $result = $s->updateStatus(); 
@@ -69,7 +69,7 @@ foreach ($knownServers as $serverInfo) {
     }
     else {
         // Yes ! Server is up :)
-        if($s->get_cvar("gamename") == 'q3ut4' || $s->get_cvar("gamename") == 'q3urt42') {
+        if($s->get_cvar('gamename') == 'q3ut4' || $s->get_cvar('gamename') == 'q3urt42') {
             foreach ($conf['collector']['plugins'] as $pluginName)  {
                 $funcName = $pluginName.'_work';
 
@@ -80,10 +80,9 @@ foreach ($knownServers as $serverInfo) {
     } 
 }
 
-
 // Step 3 - Save collected data for master
 foreach ($conf['collector']['plugins'] as $pluginName)  {
-    $funcName = $pluginName."_save";
+    $funcName = $pluginName.'_save';
 
     if(function_exists($funcName))
         $funcName($id);

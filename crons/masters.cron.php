@@ -41,16 +41,16 @@ define('DATA_DIR', ROOT_DIR.'../data/');
 require ROOT_DIR.'/libs/q3master.class.php';
 require ROOT_DIR.'/libs/q3status.class.php';
 
-$conf = parse_ini_file(ROOT_DIR ."/../conf.ini", true);
+$conf = parse_ini_file(ROOT_DIR .'/../conf.ini', true);
 
 // Step 1 - Get known servers by UrTStats
 $knownServers = json_decode(file_get_contents(DATA_DIR.'server_list.json'), true);
 
 // Step 2 - Get known servers by FS via master1 and master2
-list($serverIP, $serverPort) = explode(":", $conf['master']['master1'], 2);
+list($serverIP, $serverPort) = explode(':', $conf['master']['master1'], 2);
 $master1 = new q3master($serverIP, $serverPort); 
 
-list($serverIP, $serverPort) = explode(":", $conf['master']['master2'], 2);
+list($serverIP, $serverPort) = explode(':', $conf['master']['master2'], 2);
 $master2 = new q3master($serverIP, $serverPort); 
 
 $serversKnownByMaster1 = $master1->getServers();
@@ -72,7 +72,7 @@ foreach($serversKnownByFS as $server) {
 
 // Step 4 - Grab Urban terror servers on an other master
 if($conf['master']['additionalMaster']) {
-    list($serverIP, $serverPort) = explode(":", $conf['master']['additionalMaster'], 2);
+    list($serverIP, $serverPort) = explode(':', $conf['master']['additionalMaster'], 2);
     $master = new q3master($serverIP, $serverPort); 
 
     $otherServers = $master->getServers();
@@ -80,7 +80,7 @@ if($conf['master']['additionalMaster']) {
     // Let's check if it's an UrT server, and not something else :)
     foreach($otherServers as $server) {
         if(!isset($knownServers[$server])){
-            list($serverIP, $serverPort) = explode(":", $server, 2);
+            list($serverIP, $serverPort) = explode(':', $server, 2);
 
             $s = new q3status($serverIP, $serverPort); 
             $result = $s->updateStatus(); 
@@ -90,7 +90,7 @@ if($conf['master']['additionalMaster']) {
 
             if($result) {
                 // Yes ! Server is up :)
-                if($s->get_cvar("gamename") == 'q3ut4' || $s->get_cvar("gamename") == 'q3urt42') {
+                if($s->get_cvar('gamename') == 'q3ut4' || $s->get_cvar('gamename') == 'q3urt42') {
                     $knownServers[$server] = array( 'address'   => $server,
                                                     'firstSeen' => time(),
                                                     'fails'     => 0,
@@ -115,18 +115,20 @@ file_put_contents(DATA_DIR.'server_list.json', json_encode($knownServers));
 // Step 7 - Add new numbers in RRD file
 $rrdUpdater = new RRDUpdater(DATA_DIR . $conf['master']['rrdFile']);
 
-$rrdUpdater->update(array("masters" => count($serversKnownByFS),
-                          "master1" => count($serversKnownByMaster1),
-                          "master2" => count($serversKnownByMaster2)), time());
+$rrdUpdater->update(array('masters' => count($serversKnownByFS),
+                          'master1' => count($serversKnownByMaster1),
+                          'master2' => count($serversKnownByMaster2)), time());
 
 // Step 8 - Write theses numbers in json formated file
-$data = array("masters" => count($serversKnownByFS),
-              "master1" => count($serversKnownByMaster1),
-              "master2" => count($serversKnownByMaster2));
+$data = array('masters' => count($serversKnownByFS),
+              'master1' => count($serversKnownByMaster1),
+              'master2' => count($serversKnownByMaster2));
+
+file_put_contents(DATA_DIR.'/masters.last', json_encode($data));
 
 // Step 9 - Checking extrema :d
-if(file_exists(DATA_DIR."/masters.extrema")){
-    $extrema = json_decode(file_get_contents(DATA_DIR."/masters.extrema"), true);
+if(file_exists(DATA_DIR.'/masters.extrema')){
+    $extrema = json_decode(file_get_contents(DATA_DIR.'/masters.extrema'), true);
 
     if($extrema['max']['value'] < count($serversKnownByFS)){
         $extrema['max']['value'] = count($serversKnownByFS);
@@ -147,5 +149,4 @@ else{
     $extrema['min']['date'] = time();
 }
 
-file_put_contents(DATA_DIR."/masters.extrema", json_encode($extrema));
-file_put_contents(DATA_DIR."/masters.last", json_encode($data));
+file_put_contents(DATA_DIR.'/masters.extrema', json_encode($extrema));
