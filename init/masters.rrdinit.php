@@ -29,7 +29,7 @@ $rrdFile = dirname(__FILE__) . "/../data/masters.rrd";
 
 if(!file_exists($rrdFile))
 {
-    $creator = new RRDCreator($rrdFile, "now -1d", 300);
+    $creator = new RRDCreator($rrdFile, "now -1d", 1800);
     $creator->addDataSource("masters:GAUGE:600:0:U");
     $creator->addDataSource("master1:GAUGE:600:0:U");
     $creator->addDataSource("master2:GAUGE:600:0:U");
