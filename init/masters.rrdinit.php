@@ -29,21 +29,18 @@ $rrdFile = dirname(__FILE__) . "/../data/masters.rrd";
 
 if(!file_exists($rrdFile))
 {
-    $creator = new RRDCreator($rrdFile, "now -1d", 1800);
-    $creator->addDataSource("masters:GAUGE:600:0:U");
-    $creator->addDataSource("master1:GAUGE:600:0:U");
-    $creator->addDataSource("master2:GAUGE:600:0:U");
-    $creator->addArchive("AVERAGE:0.5:1:864");   // 3 days - 5 mins 
-    $creator->addArchive("MIN:0.5:1:864");
-    $creator->addArchive("MAX:0.5:1:864");
-    $creator->addArchive("AVERAGE:0.5:4:720");   // 10 days - 20 mins
-    $creator->addArchive("MIN:0.5:4:720");
-    $creator->addArchive("MAX:0.5:4:720");
-    $creator->addArchive("AVERAGE:0.5:24:540");  // 45 days - 2 hours
-    $creator->addArchive("MIN:0.5:24:540");
-    $creator->addArchive("MAX:0.5:24:540");
+    $creator = new RRDCreator($rrdFile, "now", 1800);
+    $creator->addDataSource("masters:GAUGE:3600:0:U");
+    $creator->addDataSource("master1:GAUGE:3600:0:U");
+    $creator->addDataSource("master2:GAUGE:3600:0:U");
+    $creator->addArchive("AVERAGE:0.5:1:144");   // 3 days - 30 mins 
+    $creator->addArchive("MIN:0.5:1:144");
+    $creator->addArchive("MAX:0.5:1:144");
+    $creator->addArchive("AVERAGE:0.5:2:1080");  // 45 days - 1 hours
+    $creator->addArchive("MIN:0.5:2:1080");
+    $creator->addArchive("MAX:0.5:2:1080");
     $creator->addArchive("AVERAGE:0.5:288:5000"); // 5000 days - 1 day
-    $creator->addArchive("MIN:0.5:288:5000");
-    $creator->addArchive("MAX:0.5:288:5000");
+    $creator->addArchive("MIN:0.5:48:5000");
+    $creator->addArchive("MAX:0.5:48:5000");
     $creator->save();
 }
