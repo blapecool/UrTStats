@@ -69,7 +69,7 @@ foreach ($knownServers as $serverInfo) {
     }
     else {
         // Yes ! Server is up :)
-        if($s->get_cvar('gamename') == 'q3ut4' || $s->get_cvar('gamename') == 'q3urt42') {
+        if($s->get_cvar('gamename') == 'q3ut4' || $s->get_cvar('gamename') == 'q3urt42' || $s->get_cvar('gamename') == 'q3urt43') {
             foreach ($conf['collector']['plugins'] as $pluginName)  {
                 $funcName = $pluginName.'_work';
 
