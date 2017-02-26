@@ -33,7 +33,7 @@
                                 "serversPV" =>0);
 
     $plug_versionsData['4.1'] = $plug_versionArray;                         // 4.1
-    $plug_versionsData[$conf['latest42version']] = $plug_versionArray;      // Latest 4.2
+    $plug_versionsData[$conf['latest42version']] = $plug_versionArray;      // Latest 4.3
     $plug_versionsData["UNKNOWN"] = $plug_versionArray;
 
 function versions_work($s){
@@ -45,7 +45,7 @@ function versions_work($s){
 
     if(!isset($plug_versionsData[$version]))
     {
-        if(preg_match("`^4\.2\.[0-9]+$`", $version))            // Official 4.2 versions
+        if(preg_match("`^4\.(2|3)\.[0-9]+$`", $version))            // Official 4.(2|3) versions
             $plug_versionsData[$version] = $plug_versionArray;
         elseif(substr($version, 0, 3) == "4.1")
             $version = "4.1";
